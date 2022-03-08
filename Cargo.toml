@@ -1,0 +1,11 @@
+[package]
+name = "link_backlog"
+version = "0.1.0"
+authors = ["Starz0r <starz0r@starz0r.com>"]
+edition = "2018"
+
+[dependencies]
+tera = "1.15.0"
+anyhow = "1.0.56"
+axum = { version = "0.4.8", features = ["http2", "json"] }
+tokio = { version = "1.17.0", features = ["rt-multi-thread"] }
