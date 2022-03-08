@@ -1,25 +1,29 @@
 mod app;
 
+use std::sync::Arc;
+
 use {
     anyhow::{Error, Result},
-    axum::{response::IntoResponse, routing::get, Router},
+    axum::{extract::Extension, response::Html, response::IntoResponse, routing::get, Router},
+    tera::Tera,
 };
 
 use app::Application;
 
-fn main() -> Result<(), Error> {
+pub fn main() -> Result<(), Error> {
+    // TODO: Config stuff to go here
     let rt = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .build()?;
-
     rt.block_on(async {
-        let mut app = Application::with_routes(Router::new().route("/", get(index)));
+        let mut app = Application::with_routes(Router::new().route("/", get(index)))?;
+        app.enable_templates();
         app.listen_and_serve().await?;
 
         Ok(())
     })
 }
 
-async fn index() -> impl IntoResponse {
-    "Hello, world!\n"
+pub async fn index(Extension(tmpl): Extension<Arc<Tera>>) -> axum::response::Html<String> {
+    Html(tmpl.render("index.html", &tera::Context::new()).unwrap())
 }
