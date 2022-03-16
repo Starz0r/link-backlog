@@ -1,0 +1,26 @@
+<nav class="navbar is-link" role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a class="navbar-item" href="https://bulma.io">
+      <img src="/assets/chainlink.png">
+	  Link Backlog
+    </a>
+  </div>
+
+  <div id="main-navbar" class="navbar-menu">
+    <div class="navbar-start">
+      <a class="navbar-item">
+        Add New
+      </a>
+
+      <a class="navbar-item">
+        Groups
+      </a>
+	  
+	  <a class="navbar-item">
+        Tags
+      </a>
+	  
+    </div>
+  </div>
+  
+</nav>

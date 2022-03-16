@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en">
+	<head>
+		{% block header %}
+		<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.3/css/bulma.min.css" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta charset="utf-8" />
+		<title>{% block title %} {% endblock %}</title>
+		<style type="text/css" media="screen">
+			#main {
+				display: flex;
+				min-width: 100vw;
+				min-height: 100vh !important;
+				flex-direction: column;
+			}
+			
+			.content {
+				flex: 1 !important;
+			}
+		</style>
+		{% endblock %}
+	</head>
+	<body id="main">
+		<div id="content" class="content">
+			{% include "components/navbar.html.tera" %}
+			{% block content %}
+			{% endblock %}
+		</div>
+		<footer class="footer" id="footer">
+			<div class="content has-text-centered">
+				<p>
+					&copy; Copyright 2022 - Starz0r
+				</p>
+			</div>
+		</footer>
+	</body>
+</html>
