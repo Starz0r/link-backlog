@@ -32,7 +32,6 @@ pub fn main() -> Result<(), Error> {
         .build()?;
     rt.block_on(async {
         let mut app = Application::prepare(cfg).await?;
-        app.enable_templates();
         app.listen_and_serve().await?;
 
         Ok(())

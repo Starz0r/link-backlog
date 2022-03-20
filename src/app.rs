@@ -55,6 +55,7 @@ pub(crate) struct Application {
 
 impl Application {
     pub async fn prepare(config: super::config::Configuration) -> Result<Self, Error> {
+        let tera = Arc::new(Tera::new("static/templates/**/*.html.tera")?);
         let router = Router::new()
             .route("/", get(super::pages::index))
             .nest(
@@ -68,8 +69,8 @@ impl Application {
                     },
                 ),
             )
-            .layer(CookieManagerLayer::new());
-        let tera = Arc::new(Tera::new("static/templates/**/*.html.tera")?);
+            .layer(CookieManagerLayer::new())
+            .layer(Extension(tera.clone()));
         let openid_client = Arc::new(
             openid::DiscoveredClient::discover(
                 config.openid.client_id.clone(),
@@ -89,12 +90,6 @@ impl Application {
             openid: openid_client,
             sessions,
         })
-    }
-
-    pub fn enable_templates(&mut self) {
-        // QUEST: Can we do this without cloning?
-        let routes = self.router.clone();
-        self.router = routes.layer(Extension(self.templates.clone()));
     }
 
     pub async fn listen_and_serve(&mut self) -> Result<(), Error> {
