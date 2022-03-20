@@ -5,13 +5,19 @@ use std::{
 
 use {
     anyhow::{Error, Result},
-    axum::{extract::Extension, routing::get, Router, Server},
+    axum::{
+        extract::Extension,
+        routing::{get, get_service},
+        Router, Server,
+    },
     dashmap::DashMap,
     openid::Userinfo,
-    reqwest::Url,
+    reqwest::{StatusCode, Url},
     serde::{Deserialize, Serialize},
     tera::Tera,
-    tracing::{debug, info},
+    tower_cookies::CookieManagerLayer,
+    tower_http::services::ServeDir,
+    tracing::{info, trace},
 };
 
 type OpenIDClient = openid::Client<openid::Discovered, openid::StandardClaims>;
@@ -49,8 +55,21 @@ pub(crate) struct Application {
 
 impl Application {
     pub async fn prepare(config: super::config::Configuration) -> Result<Self, Error> {
-        let router = Router::new().route("/", get(super::pages::index));
-        let tera = Arc::new(Tera::new("src/pages/templates/**/*.html.tera")?);
+        let router = Router::new()
+            .route("/", get(super::pages::index))
+            .nest(
+                "/static",
+                get_service(ServeDir::new("static/")).handle_error(
+                    |e: std::io::Error| async move {
+                        (
+                            StatusCode::INTERNAL_SERVER_ERROR,
+                            format!("static filesystem error: {e}"),
+                        )
+                    },
+                ),
+            )
+            .layer(CookieManagerLayer::new());
+        let tera = Arc::new(Tera::new("static/templates/**/*.html.tera")?);
         let openid_client = Arc::new(
             openid::DiscoveredClient::discover(
                 config.openid.client_id.clone(),
@@ -60,7 +79,7 @@ impl Application {
             )
             .await?,
         );
-        debug!("OpenID Config: {:?}", openid_client.config());
+        trace!("OpenID Config: {:?}", openid_client.config());
         let sessions = Arc::new(DashMap::new() as Sessions);
         Ok(Self {
             cfg: config,
