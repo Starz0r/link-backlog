@@ -1,5 +1,25 @@
 {% extends "components/base.html.tera" %}
 
 {% block content %}
-Hello, world!
+
+
+{% if user is defined %}
+
+<h3>Welcome {{ user.login }}.</h3>
+
+{% else %}
+
+<section class="section is-small">
+	<div class="container is-max-desktop">
+		<div class="box notification is-info">
+		  Please sign-in to use the application.
+		</div>
+	</div>
+</section>
+
+{% endif %}
+
+
+
+
 {% endblock %}

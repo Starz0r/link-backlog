@@ -1,7 +1,7 @@
 <nav class="navbar is-link" role="navigation" aria-label="main navigation">
   <div class="navbar-brand">
     <a class="navbar-item" href="https://bulma.io">
-      <img src="/assets/chainlink.png">
+      <img src="/static/assets/chainlink.png">
 	  Link Backlog
     </a>
   </div>
@@ -21,6 +21,37 @@
       </a>
 	  
     </div>
+	
+	{% if user is defined %}
+	<div class="navbar-end">
+	  <a class="navbar-item">
+        Logged in as {{ user.login }}
+      </a>
+	  
+      <div class="navbar-item">
+        <div class="buttons">
+          <a class="button is-danger is-light" href="/api/v0/oauth2/logout/oidc">
+            <strong>Logout</strong>
+          </a>
+        </div>
+      </div>
+	  
+    </div>
+	{% else %}
+	<div class="navbar-end">
+      <div class="navbar-item">
+        <div class="buttons">
+		  <a class="button is-primary is-light" href="/api/v0/oauth2/login/oidc">
+            Login
+          </a>
+          <a class="button is-link is-light">
+            <strong>Register</strong>
+          </a>
+        </div>
+      </div>
+    </div>
+	{% endif %}
+	
   </div>
   
 </nav>
