@@ -69,7 +69,8 @@ impl Application {
         let sessions = Arc::new(DashMap::new() as Sessions);
         let apis = Router::new()
             .route("/auth/oauth2/code/oidc", get(super::api::authenticate))
-            .route("/oauth2/login/oidc", get(super::api::login));
+            .route("/oauth2/login/oidc", get(super::api::login))
+            .route("/oauth2/logout/oidc", get(super::api::logout));
         let router = Router::new()
             .nest("/api/v0", apis)
             .route("/", get(super::pages::index))

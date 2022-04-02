@@ -45,10 +45,11 @@ pub async fn authenticate(
     cookies: Cookies,
     Query(req): Query<LoginRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<ApiError<'static>>)> {
-    // TODO: check the state matches
+    // TODO: check that the state matches
     let request_token = request_token(openid, &req).await;
     match request_token {
         Ok(Some((token, userinfo))) => {
+            // TODO: randomize the session id
             let id = "randomize this";
 
             let login = userinfo.preferred_username.clone();
@@ -112,4 +113,30 @@ pub async fn login(Extension(openid): Extension<Arc<OpenIDClient>>) -> impl Into
     });
 
     Redirect::found(auth_url.into_string().parse().unwrap())
+}
+
+pub async fn logout(
+    Extension(sessions): Extension<Arc<Sessions>>,
+    cookies: Cookies,
+) -> Result<impl IntoResponse, (StatusCode, Json<ApiError<'static>>)> {
+    // HACK: dumb juggling because the cookie taken from the jar isn't static
+    let session = cookies
+        .get("sess")
+        .and_then(|c| Some(c.value().clone().to_string()))
+        .unwrap_or("".to_string());
+
+    if session.is_empty() {
+        error!("user attempted logout with no active session");
+        return Err(resp_err(
+            StatusCode::UNAUTHORIZED,
+            "not currently authenticated",
+        ));
+    }
+
+    info!("session id: {session}");
+    sessions.remove(&session);
+    cookies.remove(Cookie::new("sess", session));
+
+    info!("user logged out");
+    Ok(Redirect::permanent("/".parse().unwrap()))
 }
