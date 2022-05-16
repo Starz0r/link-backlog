@@ -7,12 +7,13 @@ use {
     anyhow::{Error, Result},
     axum::{
         extract::Extension,
-        routing::{get, get_service},
+        routing::{get, get_service, post},
         Router, Server,
     },
     dashmap::DashMap,
     openid::Userinfo,
     reqwest::{StatusCode, Url},
+    sea_orm::{Database, DatabaseConnection},
     serde::{Deserialize, Serialize},
     tera::Tera,
     tower_cookies::CookieManagerLayer,
@@ -51,11 +52,13 @@ pub(crate) struct Application {
     templates: Arc<Tera>,
     openid: Arc<OpenIDClient>,
     sessions: Arc<Sessions>,
+    database: Arc<DatabaseConnection>,
 }
 
 impl Application {
     pub async fn prepare(config: super::config::Configuration) -> Result<Self, Error> {
         let tera = Arc::new(Tera::new("static/templates/**/*.html.tera")?);
+
         let openid_client = Arc::new(
             openid::DiscoveredClient::discover(
                 config.openid.client_id.clone(),
@@ -66,11 +69,24 @@ impl Application {
             .await?,
         );
         trace!("OpenID Config: {:?}", openid_client.config());
+
+        let db_url = format!(
+            "postgres://{}:{}@{}:{}/{}",
+            config.database.user,
+            config.database.pass,
+            config.database.host,
+            config.database.port,
+            config.database.database
+        );
+        let db = Arc::new(Database::connect(db_url).await?);
+        trace!("Database Config: {:?}", config.database);
+
         let sessions = Arc::new(DashMap::new() as Sessions);
         let apis = Router::new()
             .route("/auth/oauth2/code/oidc", get(super::api::authenticate))
             .route("/oauth2/login/oidc", get(super::api::login))
-            .route("/oauth2/logout/oidc", get(super::api::logout));
+            .route("/oauth2/logout/oidc", get(super::api::logout))
+            .route("/link", post(super::api::links::submit));
         let router = Router::new()
             .nest("/api/v0", apis)
             .route("/", get(super::pages::index))
@@ -88,7 +104,8 @@ impl Application {
             .layer(CookieManagerLayer::new())
             .layer(Extension(tera.clone()))
             .layer(Extension(openid_client.clone()))
-            .layer(Extension(sessions.clone()));
+            .layer(Extension(sessions.clone()))
+            .layer(Extension(db.clone()));
         Ok(Self {
             cfg: config,
             addr: SocketAddr::new(IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)), 3030),
@@ -96,6 +113,7 @@ impl Application {
             templates: tera,
             openid: openid_client,
             sessions,
+            database: db,
         })
     }
 

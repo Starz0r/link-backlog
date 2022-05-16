@@ -1,6 +1,8 @@
 mod api;
 mod app;
 mod config;
+mod database;
+mod identity;
 mod pages;
 
 use std::sync::Arc;
