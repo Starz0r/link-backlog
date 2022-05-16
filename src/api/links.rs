@@ -9,8 +9,10 @@ use {
     },
     axum_auth::AuthBearer,
     reqwest::Url,
-    sea_orm::entity::{prelude::*, Set},
-    sea_orm::DatabaseConnection,
+    sea_orm::{
+        entity::{prelude::*, Set},
+        DatabaseConnection, QueryOrder,
+    },
     serde::{Deserialize, Serialize},
     tower_cookies::{Cookie, Cookies},
     tracing::{debug, error, info, warn},
@@ -88,6 +90,20 @@ impl Link {
             deleted_at: der.deleted_at.unwrap(),
         })
     }
+
+    pub fn from_inactive_der(der: links::Model) -> Result<Self, Error> {
+        Ok(Self {
+            id: Ulid::from_string(&der.id)?,
+            url: der.url.parse()?,
+            title: der.title,
+            sensitive: der.sensitive,
+            created_by: der.created_by,
+            date_created: der.date_created,
+            modified_at: der.modified_at,
+            archived_at: der.archived_at,
+            deleted_at: der.deleted_at,
+        })
+    }
 }
 
 #[derive(Deserialize)]
@@ -155,4 +171,62 @@ pub async fn submit(
 
     // return the response
     Ok((StatusCode::CREATED, Json(link)))
+}
+
+#[derive(Deserialize)]
+pub struct ListRequest {
+    page: Option<usize>,
+    links_per_page: Option<usize>,
+}
+
+pub async fn list(
+    Extension(sessions): Extension<Arc<Sessions>>,
+    Extension(dbconn): Extension<Arc<DatabaseConnection>>,
+    AuthBearer(auth_token): AuthBearer,
+    Query(req): Query<ListRequest>,
+) -> Result<impl IntoResponse, (StatusCode, Json<ApiError<'static>>)> {
+    // get user
+    let user = match identity::user_from_session(sessions, auth_token) {
+        Some(u) => u,
+        None => return Err(resp_err(StatusCode::UNAUTHORIZED, "user is not signed in")),
+    };
+    let user_id: UserId = user.id;
+
+    let page = req.page.unwrap_or(1);
+    let links_per_page = req.links_per_page.unwrap_or(50);
+    let paginator = links::Entity::find()
+        .order_by_asc(links::Column::DateCreated)
+        .filter(links::Column::CreatedBy.eq(user_id))
+        .paginate(dbconn.as_ref(), links_per_page);
+
+    let links = match paginator.fetch_page(page - 1).await {
+        Ok(ok) => ok,
+        Err(e) => {
+            error!("fetching a page of links from the database failed: {e}");
+            return Err(resp_err(
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "couldn't retrieve links from database",
+            ));
+        }
+    };
+
+    // convert der's to a rust struct
+    let mut converted_links = Vec::new();
+    for link in links {
+        converted_links.push(match Link::from_inactive_der(link) {
+            Ok(mut ok) => {
+                ok.created_by.clear();
+                ok
+            }
+            Err(e) => {
+                error!("der link couldn't be casted into rust repr link: {e}");
+                return Err(resp_err(
+                    StatusCode::UNPROCESSABLE_ENTITY,
+                    "link in database couldn't be processed",
+                ));
+            }
+        })
+    }
+
+    Ok((StatusCode::OK, Json(converted_links)))
 }
