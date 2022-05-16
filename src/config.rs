@@ -7,16 +7,26 @@ use {
 };
 
 #[derive(Deserialize, Serialize, Debug)]
-pub(crate) struct Configuration {
-    pub(crate) openid: OpenID,
-}
-
-#[derive(Deserialize, Serialize, Debug)]
 pub(crate) struct OpenID {
     pub(crate) client_id: String,
     pub(crate) client_secret: String,
     pub(crate) issuer: Url,
     pub(crate) redirect: String,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub(crate) struct Database {
+    pub(crate) host: String,
+    pub(crate) port: u16,
+    pub(crate) user: String,
+    pub(crate) pass: String,
+    pub(crate) database: String,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub(crate) struct Configuration {
+    pub(crate) openid: OpenID,
+    pub(crate) database: Database,
 }
 
 impl Configuration {
