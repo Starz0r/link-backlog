@@ -1,0 +1,73 @@
+CREATE TABLE "links" (
+	"id" VARCHAR(26) NOT NULL UNIQUE,
+	"url" VARCHAR(1024) NOT NULL,
+	"title" VARCHAR(256),
+	"sensitive" BOOLEAN NOT NULL DEFAULT FALSE,
+	"created_by" VARCHAR(256) NOT NULL,
+	"date_created" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+	"modified_at" TIMESTAMP WITH TIME ZONE,
+	"archived_at" TIMESTAMP WITH TIME ZONE,
+	"deleted_at" TIMESTAMP WITH TIME ZONE,
+	PRIMARY KEY ("id")
+);
+
+CREATE TABLE "notes" (
+	"id" VARCHAR(26) NOT NULL UNIQUE,
+	"link_id" VARCHAR(26) NOT NULL,
+	"body" TEXT,
+	"private" BOOLEAN NOT NULL DEFAULT FALSE,
+	"created_by" VARCHAR(256) NOT NULL,
+	"date_created" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+	"modified_at" TIMESTAMP WITH TIME ZONE,
+	"deleted_at" TIMESTAMP WITH TIME ZONE,
+	PRIMARY KEY ("id"),
+	FOREIGN KEY ("link_id") REFERENCES "links" ("id") ON DELETE CASCADE
+);
+
+CREATE TABLE "groups" (
+	"id" VARCHAR(26) NOT NULL UNIQUE,
+	"name" VARCHAR(128) NOT NULL,
+	"description" TEXT,
+	"created_by" VARCHAR(256) NOT NULL,
+	"date_created" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+	"modified_at" TIMESTAMP WITH TIME ZONE,
+	"deleted_at" TIMESTAMP WITH TIME ZONE,
+	PRIMARY KEY ("id")
+);
+
+CREATE TABLE "grouped_links" (
+	"id" VARCHAR(26) NOT NULL UNIQUE,
+	"link_id" VARCHAR(26) NOT NULL,
+	"group_id" VARCHAR(26) NOT NULL,
+	"name" VARCHAR(128) NOT NULL,
+	"description" TEXT,
+	"created_by" VARCHAR(256) NOT NULL,
+	"date_created" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+	"deleted_at" TIMESTAMP WITH TIME ZONE,
+	PRIMARY KEY ("id"),
+	FOREIGN KEY ("link_id") REFERENCES "links" ("id") ON DELETE CASCADE,
+	FOREIGN KEY ("group_id") REFERENCES "groups" ("id") ON DELETE CASCADE
+);
+
+CREATE TABLE "tags" (
+	"id" VARCHAR(26) NOT NULL UNIQUE,
+	"name" VARCHAR(128) NOT NULL,
+	"description" TEXT,
+	"created_by" VARCHAR(256) NOT NULL,
+	"date_created" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+	"modified_at" TIMESTAMP WITH TIME ZONE,
+	"deleted_at" TIMESTAMP WITH TIME ZONE,
+	PRIMARY KEY ("id")
+);
+
+CREATE TABLE "tagged_links" (
+	"id" VARCHAR(26) NOT NULL UNIQUE,
+	"link_id" VARCHAR(26) NOT NULL,
+	"tag_id" VARCHAR(26) NOT NULL,
+	"created_by" VARCHAR(256) NOT NULL,
+	"date_created" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+	"deleted_at" TIMESTAMP WITH TIME ZONE,
+	PRIMARY KEY ("id"),
+	FOREIGN KEY ("link_id") REFERENCES "links" ("id") ON DELETE CASCADE,
+	FOREIGN KEY ("tag_id") REFERENCES "tags" ("id") ON DELETE CASCADE
+);
