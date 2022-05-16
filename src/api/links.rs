@@ -26,7 +26,7 @@ use super::{
 
 pub type LinkId = Ulid;
 
-#[derive(Deserialize, Serialize)]
+#[derive(Deserialize, Serialize, Clone)]
 pub struct Link {
     pub id: LinkId,
     pub url: Url,
@@ -139,25 +139,20 @@ pub async fn submit(
         req.sensitive.unwrap_or_default(),
         user.id as UserId,
     );
-    let link = match link.into_der().save(dbconn.as_ref()).await {
+    match links::Entity::insert(link.clone().into_der())
+        .exec(dbconn.as_ref())
+        .await
+    {
         Ok(l) => l,
         Err(e) => {
+            error!("tried committing link to database: {e}");
             return Err(resp_err(
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "database was unreachable",
-            ))
+            ));
         }
     };
 
     // return the response
-    match Link::from_der(link) {
-        Ok(l) => Ok((StatusCode::CREATED, Json(l))),
-        Err(e) => {
-            warn!("link was commited to the database, but the returning object could not be serialized: {e}");
-            Err(resp_err(
-                StatusCode::CREATED,
-                "saved to account, but could not serialize object",
-            ))
-        }
-    }
+    Ok((StatusCode::CREATED, Json(link)))
 }
