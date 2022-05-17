@@ -63,6 +63,8 @@ pub async fn authenticate(
                 .map(char::from)
                 .collect::<String>();
 
+            std::mem::drop(c_rng); // drop the mutex immediately after we're done
+
             let login = userinfo.preferred_username.clone();
             let email = userinfo.email.clone();
 
