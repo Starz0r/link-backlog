@@ -1,6 +1,6 @@
 use std::{
     net::{IpAddr, Ipv4Addr, SocketAddr},
-    sync::Arc,
+    sync::{Arc, Mutex},
 };
 
 use {
@@ -12,6 +12,8 @@ use {
     },
     dashmap::DashMap,
     openid::Userinfo,
+    rand::SeedableRng,
+    rand_pcg::Pcg64Mcg,
     reqwest::{StatusCode, Url},
     sea_orm::{Database, DatabaseConnection},
     serde::{Deserialize, Serialize},
@@ -53,6 +55,7 @@ pub(crate) struct Application {
     openid: Arc<OpenIDClient>,
     sessions: Arc<Sessions>,
     database: Arc<DatabaseConnection>,
+    random: Arc<Mutex<Pcg64Mcg>>,
 }
 
 impl Application {
@@ -81,6 +84,9 @@ impl Application {
         let db = Arc::new(Database::connect(db_url).await?);
         trace!("Database Config: {:?}", config.database);
 
+        info!("initializing prng");
+        let rng = Arc::new(Mutex::new(Pcg64Mcg::from_entropy()));
+
         let sessions = Arc::new(DashMap::new() as Sessions);
         let apis = Router::new()
             .route("/auth/oauth2/code/oidc", get(super::api::authenticate))
@@ -106,7 +112,8 @@ impl Application {
             .layer(Extension(tera.clone()))
             .layer(Extension(openid_client.clone()))
             .layer(Extension(sessions.clone()))
-            .layer(Extension(db.clone()));
+            .layer(Extension(db.clone()))
+            .layer(Extension(rng.clone()));
         Ok(Self {
             cfg: config,
             addr: SocketAddr::new(IpAddr::V4(Ipv4Addr::new(0, 0, 0, 0)), 3030),
@@ -115,6 +122,7 @@ impl Application {
             openid: openid_client,
             sessions,
             database: db,
+            random: rng,
         })
     }
 

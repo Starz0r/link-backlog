@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 use {
     anyhow::Result,
@@ -7,6 +7,8 @@ use {
         http::StatusCode,
         response::{IntoResponse, Json, Redirect},
     },
+    rand::{distributions::Alphanumeric, Rng},
+    rand_pcg::Pcg64Mcg,
     serde::Deserialize,
     tower_cookies::{Cookie, Cookies},
     tracing::{debug, error, info},
@@ -43,14 +45,23 @@ pub async fn authenticate(
     Extension(openid): Extension<Arc<OpenIDClient>>,
     Extension(sessions): Extension<Arc<Sessions>>,
     cookies: Cookies,
+    Extension(rng): Extension<Arc<Mutex<Pcg64Mcg>>>,
     Query(req): Query<LoginRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<ApiError<'static>>)> {
     // TODO: check that the state matches
     let request_token = request_token(openid, &req).await;
     match request_token {
         Ok(Some((token, userinfo))) => {
-            // TODO: randomize the session id
-            let id = "randomize this";
+            // QUEST: why do I have to do this???
+            let c_rng = rng.clone();
+            let c_rng = c_rng.as_ref().lock().unwrap();
+
+            let id = c_rng
+                .clone() // QUEST: or this????
+                .sample_iter(&Alphanumeric)
+                .take(24)
+                .map(char::from)
+                .collect::<String>();
 
             let login = userinfo.preferred_username.clone();
             let email = userinfo.email.clone();
@@ -67,7 +78,7 @@ pub async fn authenticate(
                 authorities: vec!["user".to_string()],
             };
 
-            let mut auth_cookie = Cookie::new("sess", id);
+            let mut auth_cookie = Cookie::new("sess", id.clone());
             auth_cookie.set_path("/");
             auth_cookie.set_http_only(true);
 
@@ -75,7 +86,7 @@ pub async fn authenticate(
 
             debug!("user: {user:?}");
             sessions.insert(
-                id.to_string(),
+                id,
                 Session {
                     user,
                     token,
