@@ -4,7 +4,7 @@ COPY ./ /build
 RUN apk update \
     && apk --no-cache add clang lld libc-dev openssl-dev
 
-RUN RUSTFLAGS='-C linker=clang -C link-arg=-fuse-ld=lld -C target-cpu=skylake' \
+RUN RUSTFLAGS='-C linker=clang -C link-arg=-fuse-ld=lld' \
     cargo build --target x86_64-unknown-linux-musl --release --locked
 
 FROM grafana/alpine:3.15.4
