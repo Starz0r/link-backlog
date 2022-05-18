@@ -1,0 +1,50 @@
+version: 2.1
+
+executors:
+  docker:
+    working_directory: /tmp/workspace
+    docker:
+      - image: docker:latest
+
+jobs:
+    docker:
+        parameters:
+            with_deploy:
+                type: boolean
+                default: false
+        executor: docker
+        steps:
+            - run:
+                name: Udapte Alpine APK Cache
+                command: |
+                    apk update
+            - run:
+                name: Install Git & SSH
+                command: |
+                    apk add git openssh-client openssh --no-cache
+            - checkout
+            - setup_remote_docker:
+                version: 17.09.0-ce
+            - run:
+                name: Build
+                command: |
+                    docker build -t $CONTAINER_REGISTRY_URL/$CONTAINER_REGISTRY/link-backlog:latest .
+            - when:
+                condition: <<parameters.with_deploy>>
+                steps:
+                    - run:
+                        name: Publish
+                        command: |
+                            echo $CONTAINER_REGISTRY_PASS | docker login ghcr.io -u $CONTAINER_REGISTRY_USER --password-stdin
+                            docker push $CONTAINER_REGISTRY_URL/$CONTAINER_REGISTRY/link-backlog:latest
+                            
+workflows:
+    version: 2
+    build:
+        jobs:
+            - docker:
+                name: auto-build
+                with_deploy: true
+                filters:
+                    branches:
+                        only: master
