@@ -1,4 +1,4 @@
-FROM instrumentisto/rust:1.60.0-alphine3.15 AS builder
+FROM instrumentisto/rust:1.60.0-alpine3.15 AS builder
 WORKDIR /build
 COPY ./ /build
 RUN apk update \
