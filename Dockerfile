@@ -2,9 +2,9 @@ FROM instrumentisto/rust:1.60.0-alpine3.15 AS builder
 WORKDIR /build
 COPY ./ /build
 RUN apk update \
-    && apk --no-cache add clang lld libc-dev openssl-dev
+    && apk --no-cache add clang lld libc-dev
 
-RUN RUSTFLAGS='-C linker=clang -C link-arg=-fuse-ld=lld -C target-feature=-crt-static -C target-cpu=skylake' \
+RUN RUSTFLAGS='-C linker=clang -C link-arg=-fuse-ld=lld -C target-cpu=skylake' \
     cargo build --target x86_64-unknown-linux-musl --release --locked
 
 FROM grafana/alpine:3.15.4

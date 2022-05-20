@@ -10,11 +10,11 @@ anyhow = "1.0.56"
 tracing = { version = "0.1.31", features = ["valuable"] }
 axum = { version = "0.4.8", features = ["http2", "json"] }
 tower-cookies = "0.5.1"
-sea-orm = { version = "0.6.0", features = ["sqlx-postgres", "sqlx-json", "runtime-tokio-native-tls"] }
+sea-orm = { version = "0.6.0", features = ["sqlx-postgres", "sqlx-json", "runtime-tokio-rustls"] }
 tower-http = { version = "0.2.5", features = ["fs"] }
-openid = { version = "0.9.3", features = ["rustls"] }
+openid = { version = "0.9.3", default-features = false, features = ["rustls"] }
 tokio = { version = "1.17.0", features = ["rt-multi-thread"] }
-reqwest = { version = "0.11.10", features = ["gzip", "brotli", "deflate", "rustls-tls"] }
+reqwest = { version = "0.11.10", default-features = false, features = ["gzip", "brotli", "deflate", "rustls-tls"] }
 toml = "0.5.8"
 serde = "1.0.136"
 tracing-subscriber = "0.3.9"
