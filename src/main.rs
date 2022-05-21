@@ -1,3 +1,5 @@
+#![feature(int_roundings)]
+
 mod api;
 mod app;
 mod config;

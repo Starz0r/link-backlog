@@ -10,7 +10,7 @@ use {
     serde::Deserialize,
     tera::{Context, Tera},
     tower_cookies::Cookies,
-    tracing::{error, info},
+    tracing::{error, info, warn},
 };
 
 use crate::{
@@ -50,9 +50,17 @@ pub async fn index(
     let page = req.page.unwrap_or(1);
     let links_per_page = req.links_per_page.unwrap_or(50);
     let paginator = links::Entity::find()
-        .filter(links::Column::CreatedBy.eq(user_id))
         .order_by_desc(links::Column::DateCreated)
+        .filter(links::Column::CreatedBy.eq(user_id.clone()))
         .paginate(dbconn.as_ref(), links_per_page);
+    match links::Entity::find()
+        .filter(links::Column::CreatedBy.eq(user_id))
+        .count(dbconn.as_ref())
+        .await
+    {
+        Ok(total_links) => ctx.insert("pages", &total_links.div_ceil(links_per_page)),
+        Err(e) => warn!("amount of pages couldn't be counted: {e}"),
+    }
 
     let links = match paginator.fetch_page(page - 1).await {
         Ok(ok) => ok,
