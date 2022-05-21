@@ -9,34 +9,97 @@
 	{% if error is not defined %}
 	
 		<div class="columns is-justify-content-center is-align-content-center is-align-self-center">
-		<div class="column is-three-quarters">
-	
-		<div class="table-container">
-			<table class="table is-striped is-hoverable">
-				<thead>
-					<tr>
-						<th><abbr title="Submitted At">Date</abbr></th>
-						<th><abbr title="Link">URL</abbr></th>
-					</tr>
-				</thead>
-				
-				<tbody>
-				{% for link in links %}
-				<tr>
-					<th>
-						<script>
-							document.currentScript.parentElement.innerHTML = timeAgo('{{ link.date_created }}');
-						</script>
-					</th>
-					<td> {{ link.url }} </td>
-				</tr>
-				{%- endfor %}
-				</tbody>
-			</table>
+			<div class="column is-three-quarters">
+		
+				<div class="table-container">
+					<table class="table is-striped is-hoverable">
+						<thead>
+							<tr>
+								<th><abbr title="Submitted At">Date</abbr></th>
+								<th><abbr title="Link">URL</abbr></th>
+							</tr>
+						</thead>
+						
+						<tbody>
+						{% for link in links %}
+						<tr>
+							<th>
+								<script>
+									document.currentScript.parentElement.innerHTML = timeAgo('{{ link.date_created }}');
+								</script>
+							</th>
+							<td> <a href="{{ link.url }}"> {{ link.url }} </a> </td>
+						</tr>
+						{%- endfor %}
+						</tbody>
+					</table>
+				</div>
+			
+			</div>
 		</div>
 		
-		</div>
-		</div>
+		<nav class="pagination" role="navigation" aria-label="pagination">
+		
+		{% if current_page > 1 %}
+			<a class="pagination-previous" href="?page={{ current_page - 1 }}">Previous</a>
+		{% else %}
+			<a class="pagination-previous is-disabled">Previous</a>
+		{% endif %}
+			
+		{% if current_page != pages %}
+			<a class="pagination-next" href="?page={{ current_page + 1 }}">Next page</a>
+		{% else %}
+			<a class="pagination-next is-disabled">Next page</a>
+		{% endif %}
+			
+		{% if pages > 1 and pages < 7 %}
+			<ul class="pagination-list">
+				{% for i in range(end=pages) %}
+					{% if i + 1 == current_page %}
+						<li>
+							<a class="pagination-link is-current" aria-label="Goto page {{ i + 1 }}">{{ i + 1 }}</a>
+						</li>
+					{% else %}
+						<li>
+							<a class="pagination-link" aria-label="Goto page {{ i + 1 }}" href="?page={{ i + 1 }}">{{ i + 1 }}</a>
+						</li>
+					{% endif %}
+				{%- endfor %}
+			</ul>
+			
+		{% elif pages >= 7 %}
+			<ul class="pagination-list">
+				{% if current_page > 2 %}
+				<li>
+					<span class="pagination-ellipsis">&hellip;</span>
+				</li>
+				{% endif %}
+				
+				{% if current_page != 1 %}
+				<li>
+					<a class="pagination-link" aria-label="Goto page {{ current_page - 1 }}" href="?page={{ current_page - 1 }}">{{ current_page - 1 }}</a>
+				</li>
+				{% endif %}
+				
+				<li>
+					<a class="pagination-link is-current" aria-label="Goto page {{ current_page }}">{{ current_page }}</a>
+				</li>
+				
+				{% if current_page != pages %}
+				<li>
+					<a class="pagination-link" aria-label="Goto page {{ current_page + 1 }}" href="?page={{ current_page + 1 }}">{{ current_page + 1 }}</a>
+				</li>
+				{% endif %}
+				
+				{% if current_page + 2 != pages %}
+				<li>
+					<span class="pagination-ellipsis">&hellip;</span>
+				</li>
+				{% endif %}
+			</ul>
+			
+		{% endif %}
+		</nav>
 
 	{% else %}
 	
