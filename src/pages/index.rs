@@ -82,6 +82,7 @@ pub async fn index(
         })
     }
     ctx.insert("links", &converted_links);
+    ctx.insert("current_page", &page);
 
     Html(tmpl.render("index.html.tera", &ctx).unwrap())
 }
