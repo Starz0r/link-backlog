@@ -28,15 +28,17 @@ jobs:
             - run:
                 name: Build
                 command: |
-                    docker build -t $CONTAINER_REGISTRY_URL/$CONTAINER_REGISTRY/link-backlog:latest .
+                    docker build -t $CONTAINER_REGISTRY_URL/$CONTAINER_REGISTRY/link-backlog:latest -t $CONTAINER_REGISTRY_URL/$CONTAINER_REGISTRY/link-backlog:$(git describe --tags --first-parent --abbrev=0) .
             - when:
                 condition: <<parameters.with_deploy>>
                 steps:
                     - run:
                         name: Publish
                         command: |
+                            git fetch --tags
                             echo $CONTAINER_REGISTRY_PASS | docker login ghcr.io -u $CONTAINER_REGISTRY_USER --password-stdin
                             docker push $CONTAINER_REGISTRY_URL/$CONTAINER_REGISTRY/link-backlog:latest
+                            docker push $CONTAINER_REGISTRY_URL/$CONTAINER_REGISTRY/link-backlog:$(git describe --tags --first-parent --abbrev=0)
                             
 workflows:
     version: 2
