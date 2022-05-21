@@ -50,8 +50,8 @@ pub async fn index(
     let page = req.page.unwrap_or(1);
     let links_per_page = req.links_per_page.unwrap_or(50);
     let paginator = links::Entity::find()
-        .order_by_asc(links::Column::DateCreated)
         .filter(links::Column::CreatedBy.eq(user_id))
+        .order_by_desc(links::Column::DateCreated)
         .paginate(dbconn.as_ref(), links_per_page);
 
     let links = match paginator.fetch_page(page - 1).await {
