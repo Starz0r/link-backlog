@@ -4,6 +4,7 @@ use {
     anyhow::{Error, Result},
     reqwest::Url,
     serde::{Deserialize, Serialize},
+    tracing::Level,
 };
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -24,9 +25,15 @@ pub(crate) struct Database {
 }
 
 #[derive(Deserialize, Serialize, Debug)]
+pub(crate) struct Tracing {
+    pub(crate) level: String,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
 pub(crate) struct Configuration {
     pub(crate) openid: OpenID,
     pub(crate) database: Database,
+    pub(crate) tracing: Option<Tracing>,
 }
 
 impl Configuration {

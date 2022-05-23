@@ -7,13 +7,13 @@ mod database;
 mod identity;
 mod pages;
 
-use std::sync::Arc;
+use std::{str::FromStr, sync::Arc};
 
 use {
-    anyhow::{Context, Error, Result},
+    anyhow::{bail, Context, Error, Result},
     axum::{extract::Extension, response::Html, response::IntoResponse, routing::get, Router},
     tera::Tera,
-    tracing::{debug, info, Level},
+    tracing::{debug, error, info, Level},
     tracing_subscriber::FmtSubscriber,
 };
 
@@ -31,6 +31,20 @@ pub fn main() -> Result<(), Error> {
     let cfg = Configuration::from_file("config.toml")
         .with_context(|| "Configuration could not be read.")?;
     debug!("{cfg:?}");
+
+    match cfg.tracing {
+        Some(t) => {
+            let lvl = match Level::from_str(t.level.as_str()) {
+                Ok(lvl) => lvl,
+                Err(e) => {
+                    bail!("Tracing level is malformed and could not be parsed: {e}");
+                }
+            };
+            let fmt_sub = FmtSubscriber::builder().with_max_level(lvl).finish();
+            tracing::subscriber::set_global_default(fmt_sub)?;
+        }
+        _ => {}
+    };
 
     let rt = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
