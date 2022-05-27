@@ -32,8 +32,9 @@ pub fn main() -> Result<(), Error> {
         .with_context(|| "Configuration could not be read.")?;
     debug!("{cfg:?}");
 
+    // TODO: move this into a validation method step
     match cfg.tracing {
-        Some(t) => {
+        Some(ref t) => {
             let lvl = match Level::from_str(t.level.as_str()) {
                 Ok(lvl) => lvl,
                 Err(e) => {
