@@ -5,8 +5,16 @@ executors:
     working_directory: /tmp/workspace
     docker:
       - image: docker:latest
+      
+orbs:
+    rust: circleci/rust@1.6.0
 
 jobs:
+    compliance:
+        steps:
+            - checkout
+            - rust/format:
+                nightly-toolchain: true
     build_app:
         parameters:
             with_deploy:
@@ -51,6 +59,8 @@ workflows:
     version: 2
     build:
         jobs:
+            - compliance:
+                name: Compliance
             - build_app:
                 name: Build & Deploy
                 with_deploy: true
