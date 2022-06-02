@@ -97,6 +97,8 @@ impl Application {
         let router = Router::new()
             .nest("/api/v0", apis)
             .route("/", get(super::pages::index))
+            .route("/apikeys", get(super::pages::apikeys::page))
+            .route("/apikeys/create", post(super::pages::apikeys::create))
             .nest(
                 "/static",
                 get_service(ServeDir::new("static/")).handle_error(
