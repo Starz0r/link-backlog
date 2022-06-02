@@ -1,0 +1,8 @@
+CREATE TABLE "api_keys" (
+	"id" VARCHAR(26) NOT NULL UNIQUE,
+	"created_by" VARCHAR(256) NOT NULL,
+	"key" VARCHAR(128) NOT NULL,
+	"date_created" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+	"deleted_at" TIMESTAMP WITH TIME ZONE,
+	PRIMARY KEY ("id")
+);

@@ -2,6 +2,7 @@
 
 pub mod prelude;
 
+pub mod api_keys;
 pub mod grouped_links;
 pub mod groups;
 pub mod links;
