@@ -19,6 +19,7 @@ jobs:
         steps:
             - checkout
             - rust/format:
+                working_directory: .
                 nightly-toolchain: true
     build_app:
         parameters:
