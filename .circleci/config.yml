@@ -62,9 +62,6 @@ workflows:
         jobs:
             - compliance:
                 name: Compliance
-                filters:
-                    branches:
-                        only: .*
             - build_app:
                 name: Build & Deploy
                 requires:
