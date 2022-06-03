@@ -68,7 +68,7 @@ workflows:
             - build_app:
                 name: Build & Deploy
                 requires:
-                    - compliance
+                    - Compliance
                 with_deploy: true
                 filters:
                     branches:
