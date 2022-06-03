@@ -15,11 +15,9 @@ orbs:
 
 jobs:
     compliance:
-        executor: docker_latest
+        executor: rust_nightly_alpine
         steps:
             - checkout
-            - rust/install:
-                version: v1.60.0-nightly
             - rust/format:
                 nightly-toolchain: true
     build_app:
