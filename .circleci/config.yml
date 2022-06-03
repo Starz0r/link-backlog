@@ -12,6 +12,7 @@ orbs:
 jobs:
     compliance:
         steps:
+        executor: docker_latest
             - checkout
             - rust/format:
                 nightly-toolchain: true
