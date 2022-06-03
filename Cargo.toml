@@ -8,7 +8,7 @@ edition = "2018"
 tera = "1.15.0"
 anyhow = "1.0.56"
 tracing = { version = "0.1.31", features = ["valuable"] }
-axum = { version = "0.4.8", features = ["http2", "json"] }
+axum = { version = "0.4.8", features = ["http2", "json", "multipart"] }
 tower-cookies = "0.5.1"
 sea-orm = { version = "0.6.0", features = ["sqlx-postgres", "sqlx-json", "runtime-tokio-rustls"] }
 tower-http = { version = "0.2.5", features = ["fs"] }

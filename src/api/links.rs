@@ -19,7 +19,11 @@ use {
     ulid::Ulid,
 };
 
-use crate::{app::Sessions, database::entity::links, identity};
+use crate::{
+    app::Sessions,
+    database::entity::{api_keys, links},
+    identity,
+};
 
 use super::{
     error::{resp_err, ApiError},
@@ -130,11 +134,12 @@ pub async fn submit(
     AuthBearer(auth_token): AuthBearer,
     Json(req): Json<SubmitRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<ApiError<'static>>)> {
-    // get user
-    let user = match identity::user_from_session(sessions, auth_token) {
-        Some(u) => u,
-        None => return Err(resp_err(StatusCode::UNAUTHORIZED, "user is not signed in")),
+    // get api key context
+    let apikey = match identity::valid_api_key(dbconn.clone(), auth_token).await {
+        Some(apikey) => apikey,
+        None => return Err(resp_err(StatusCode::UNAUTHORIZED, "api key is not valid")),
     };
+    let user_id = apikey.created_by as UserId;
 
     // try parsing url
     let url = match req.link.parse() {
@@ -153,7 +158,7 @@ pub async fn submit(
         req.submitted_at,
         req.title,
         req.sensitive.unwrap_or_default(),
-        user.id as UserId,
+        user_id,
     );
     match links::Entity::insert(link.clone().into_der())
         .exec(dbconn.as_ref())
@@ -185,12 +190,12 @@ pub async fn list(
     AuthBearer(auth_token): AuthBearer,
     Query(req): Query<ListRequest>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<ApiError<'static>>)> {
-    // get user
-    let user = match identity::user_from_session(sessions, auth_token) {
-        Some(u) => u,
-        None => return Err(resp_err(StatusCode::UNAUTHORIZED, "user is not signed in")),
+    // get api key context
+    let apikey = match identity::valid_api_key(dbconn.clone(), auth_token).await {
+        Some(apikey) => apikey,
+        None => return Err(resp_err(StatusCode::UNAUTHORIZED, "api key is not valid")),
     };
-    let user_id: UserId = user.id;
+    let user_id = apikey.created_by as UserId;
 
     let page = req.page.unwrap_or(1);
     let links_per_page = req.links_per_page.unwrap_or(50);
