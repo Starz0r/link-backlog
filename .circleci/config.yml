@@ -1,8 +1,12 @@
 version: 2.1
 
 executors:
+  rust_nightly_alpine:
+    working_directory: /tmp/workspace0
+    docker:
+      - image: instrumentisto/rust:nightly-alpine-2022-04-06
   docker_latest:
-    working_directory: /tmp/workspace
+    working_directory: /tmp/workspace1
     docker:
       - image: docker:latest
       
