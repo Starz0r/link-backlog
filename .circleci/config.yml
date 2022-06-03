@@ -14,6 +14,8 @@ jobs:
         executor: docker_latest
         steps:
             - checkout
+            - rust/install:
+                version: v1.60.0-nightly
             - rust/format:
                 nightly-toolchain: true
     build_app:
