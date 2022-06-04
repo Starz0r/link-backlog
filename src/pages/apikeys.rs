@@ -191,3 +191,5 @@ pub async fn create(
     // return the response
     Ok(Redirect::to("/apikeys".parse().unwrap()))
 }
+
+// TODO: deleting api keys needs also remove it from the cache as well

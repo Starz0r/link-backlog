@@ -1,4 +1,5 @@
 mod error;
+pub mod groups;
 pub mod links;
 mod oauth2;
 mod user;

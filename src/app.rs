@@ -93,7 +93,9 @@ impl Application {
             .route("/oauth2/login/oidc", get(super::api::login))
             .route("/oauth2/logout/oidc", get(super::api::logout))
             .route("/link", post(super::api::links::submit))
-            .route("/links", get(super::api::links::list));
+            .route("/links", get(super::api::links::list))
+            .route("/group", post(super::api::groups::submit))
+            .route("/groups", get(super::api::groups::list));
         let router = Router::new()
             .nest("/api/v0", apis)
             .route("/", get(super::pages::index))
