@@ -1,6 +1,6 @@
 [package]
 name = "link_backlog"
-version = "0.1.0"
+version = "0.2.0-dev"
 authors = ["Starz0r <starz0r@starz0r.com>"]
 edition = "2018"
 
