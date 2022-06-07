@@ -1,0 +1,1 @@
+ALTER TABLE "grouped_links" ADD UNIQUE ("link_id", "group_id");
