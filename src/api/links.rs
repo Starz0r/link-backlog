@@ -21,7 +21,7 @@ use {
 
 use crate::{
     app::Sessions,
-    database::entity::{api_keys, links},
+    database::entity::{api_keys, grouped_links, links},
     identity,
 };
 
@@ -112,8 +112,9 @@ impl Link {
 
 #[derive(Deserialize)]
 pub struct SubmitRequest {
+    timestamptz: DateTimeWithTimeZone,
     link: String,
-    submitted_at: DateTimeWithTimeZone,
+    groups: Option<Vec<Ulid>>, // Ulid -> GroupId
     title: Option<String>,
     sensitive: Option<bool>,
 }
@@ -155,10 +156,10 @@ pub async fn submit(
     // commit to database
     let link = Link::new(
         url,
-        req.submitted_at,
+        req.timestamptz,
         req.title,
         req.sensitive.unwrap_or_default(),
-        user_id,
+        user_id.clone(),
     );
     match links::Entity::insert(link.clone().into_der())
         .exec(dbconn.as_ref())
@@ -173,6 +174,38 @@ pub async fn submit(
             ));
         }
     };
+
+    match req.groups {
+        Some(grps) => {
+            // TODO: check if the group exists first before attempting to assign to it
+            for grp in grps {
+                let grouped_link = grouped_links::ActiveModel {
+                    id: Set(Ulid::new().to_string()),
+                    link_id: Set(link.id.to_string()),
+                    group_id: Set(grp.to_string()),
+                    name: Set(String::new()),
+                    description: Set(None),
+                    created_by: Set(user_id.clone()),
+                    date_created: Set(req.timestamptz),
+                    deleted_at: Set(None),
+                };
+                match grouped_links::Entity::insert(grouped_link)
+                    .exec(dbconn.clone().as_ref())
+                    .await
+                {
+                    Ok(_) => (),
+                    Err(e) => {
+                        error!("could not assign the link to a group: {e}");
+                        return Err(resp_err(
+                            StatusCode::MULTI_STATUS,
+                            "link was saved, but was not assigned to all the groups.",
+                        ));
+                    }
+                }
+            }
+        }
+        None => (),
+    }
 
     // return the response
     Ok((StatusCode::CREATED, Json(link)))
