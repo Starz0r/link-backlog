@@ -50,6 +50,9 @@ jobs:
                 key: cargo-v0-{{ checksum "Cargo.lock" }}
                 paths:
                     - ~/.cargo
+                    - target/release/.fingerprint
+                    - target/release/build
+                    - target/release/deps
             - when:
                 condition: <<parameters.with_deploy>>
                 steps:
